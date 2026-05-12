@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { rewriteBullet } from "@/lib/ai/nim";
 import { createClient } from "@/lib/supabase/server";
 

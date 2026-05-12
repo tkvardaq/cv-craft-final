@@ -1,11 +1,7 @@
-import OpenAI from "openai";
+import { nim } from "@/lib/ai/nim";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-
-const nim = new OpenAI({
-  apiKey: process.env.NIM_API_KEY!,
-  baseURL: "https://integrate.api.nvidia.com/v1",
-});
 
 export async function POST(req: Request) {
   try {

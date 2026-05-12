@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { analyzeJobDescription } from "@/lib/ai/nim";
 import { hashString } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
