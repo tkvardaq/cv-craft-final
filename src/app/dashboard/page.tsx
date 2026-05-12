@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FileText, Plus, Crown, Settings, ChevronRight } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { CvList } from "@/components/dashboard/cv-list";
+import { Header } from "@/components/layout/header";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -31,24 +32,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-ivory text-royal-navy font-sans">
-      <header className="bg-white border-b border-royal-navy/10">
-        <div className="max-w-7xl mx-auto px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="p-1.5 bg-royal-gold/10 rounded-lg">
-              <FileText className="h-6 w-6 text-royal-gold" />
-            </div>
-            <span className="text-xl font-bold tracking-tight">CvCRAFT</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-slate-500 hidden sm:inline">{user.email}</span>
-            <form action={signOut}>
-              <button className="text-sm font-bold text-royal-navy/60 hover:text-royal-navy transition-colors bg-slate-50 px-4 py-2 rounded-full hover:bg-slate-100">
-                Sign out
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
+      <Header userEmail={user.email} isPremium={isPremium} />
 
       <main className="max-w-7xl mx-auto px-8 py-12">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-12">

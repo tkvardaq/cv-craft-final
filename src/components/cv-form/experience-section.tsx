@@ -5,6 +5,10 @@ import { useState } from "react";
 import type { CV } from "@/lib/schemas/cv";
 import { generateId } from "@/lib/utils";
 import { useCvStore } from "@/lib/store/cv-store";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function ExperienceSection() {
   const { register, control, getValues, setValue, formState: { errors } } = useFormContext<CV>();
@@ -79,13 +83,14 @@ export function ExperienceSection() {
           <span className="h-6 w-6 rounded-full bg-royal-gold/10 text-royal-gold flex items-center justify-center text-xs font-bold">4</span>
           Work Experience
         </h3>
-        <button
+        <Button
           type="button"
           onClick={addExperience}
-          className="px-4 py-2 bg-royal-navy text-white rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all shadow-sm shadow-royal-navy/10"
+          size="sm"
+          className="bg-royal-navy text-white rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all shadow-sm shadow-royal-navy/10"
         >
           + Add Role
-        </button>
+        </Button>
       </div>
 
       {fields.map((field, expIdx) => (
@@ -103,9 +108,9 @@ export function ExperienceSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Job Title *</label>
-              <input
+              <Input
                 {...register(`experience.${expIdx}.title`)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-royal-gold focus:border-transparent text-sm bg-white transition-all outline-none"
+                className="w-full rounded-xl border border-slate-200 focus-visible:ring-2 focus-visible:ring-royal-gold focus-visible:border-transparent text-sm bg-white transition-all h-10"
                 placeholder="Software Engineer"
               />
               {errors.experience?.[expIdx]?.title && (
@@ -114,34 +119,34 @@ export function ExperienceSection() {
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Company *</label>
-              <input
+              <Input
                 {...register(`experience.${expIdx}.company`)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-royal-gold focus:border-transparent text-sm bg-white transition-all outline-none"
+                className="w-full rounded-xl border border-slate-200 focus-visible:ring-2 focus-visible:ring-royal-gold focus-visible:border-transparent text-sm bg-white transition-all h-10"
                 placeholder="Acme Ltd"
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Location</label>
-              <input
+              <Input
                 {...register(`experience.${expIdx}.location`)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-royal-gold focus:border-transparent text-sm bg-white transition-all outline-none"
+                className="w-full rounded-xl border border-slate-200 focus-visible:ring-2 focus-visible:ring-royal-gold focus-visible:border-transparent text-sm bg-white transition-all h-10"
                 placeholder="London, UK"
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Start</label>
-                <input
+                <Input
                   type="month"
                   {...register(`experience.${expIdx}.startDate`)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-royal-gold focus:border-transparent text-sm bg-white transition-all outline-none"
+                  className="w-full rounded-xl border border-slate-200 focus-visible:ring-2 focus-visible:ring-royal-gold focus-visible:border-transparent text-sm bg-white transition-all h-10"
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">End</label>
-                <input
+                <Input
                   {...register(`experience.${expIdx}.endDate`)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-royal-gold focus:border-transparent text-sm bg-white transition-all outline-none"
+                  className="w-full rounded-xl border border-slate-200 focus-visible:ring-2 focus-visible:ring-royal-gold focus-visible:border-transparent text-sm bg-white transition-all h-10"
                   placeholder="Present"
                 />
               </div>
@@ -154,10 +159,10 @@ export function ExperienceSection() {
             {(field.bullets || [""]).map((_, bulletIdx) => (
               <div key={bulletIdx} className="flex gap-2 items-start">
                 <span className="text-slate-400 mt-2.5 text-xs">•</span>
-                <textarea
+                <Textarea
                   {...register(`experience.${expIdx}.bullets.${bulletIdx}`)}
                   rows={2}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-royal-gold focus:border-transparent text-sm bg-white resize-none outline-none transition-all"
+                  className="flex-1 rounded-xl border border-slate-200 focus-visible:ring-2 focus-visible:ring-royal-gold focus-visible:border-transparent text-sm bg-white resize-none transition-all min-h-[60px]"
                   placeholder="Describe your achievement using the STAR method…"
                 />
                 <button

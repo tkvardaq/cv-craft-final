@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { type CV, type Sector, emptyCv } from "@/lib/schemas/cv";
+import { type TemplateId } from "@/lib/pdf/templates";
 
 interface CvState {
   cv: CV;
@@ -12,6 +13,7 @@ interface CvState {
   isPremium: boolean;
   credits: number;
   isLoading: boolean;
+  selectedTemplate: TemplateId;
 
   // Actions
   setCv: (cv: CV) => void;
@@ -21,6 +23,7 @@ interface CvState {
   setIsPremium: (isPremium: boolean) => void;
   setCredits: (credits: number) => void;
   setIsLoading: (isLoading: boolean) => void;
+  setTemplate: (templateId: TemplateId) => void;
   reset: () => void;
 }
 
@@ -33,6 +36,7 @@ export const useCvStore = create<CvState>((set) => ({
   isPremium: false,
   credits: 3,
   isLoading: false,
+  selectedTemplate: "professional",
 
   setCv: (cv) => set({ cv }),
   updateCv: (partial) =>
@@ -43,6 +47,7 @@ export const useCvStore = create<CvState>((set) => ({
   setIsPremium: (isPremium) => set({ isPremium }),
   setCredits: (credits) => set({ credits }),
   setIsLoading: (isLoading) => set({ isLoading }),
+  setTemplate: (selectedTemplate) => set({ selectedTemplate }),
   reset: () =>
     set({
       cv: emptyCv,

@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cvSchema, type Sector } from "@/lib/schemas/cv";
 import { scoreCV } from "@/lib/ats/scoring-engine";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { cv, sector = "general", targetTitle } = body;
 

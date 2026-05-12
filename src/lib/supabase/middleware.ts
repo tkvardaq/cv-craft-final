@@ -38,15 +38,10 @@ export async function updateSession(request: NextRequest) {
                            request.nextUrl.pathname.startsWith('/builder') || 
                            request.nextUrl.pathname.startsWith('/checkout');
 
-  if (isProtectedRoute && (!user || user.is_anonymous)) {
+  if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     return NextResponse.redirect(url);
-  }
-
-  // Auto-create anonymous session if no user and not on a protected route
-  if (!user && !isProtectedRoute) {
-    await supabase.auth.signInAnonymously();
   }
 
   return supabaseResponse;

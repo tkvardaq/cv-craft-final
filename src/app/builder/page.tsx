@@ -1,7 +1,7 @@
-import { CvBuilderForm } from "@/components/cv-form/cv-builder-form";
-import { redirect } from "next/navigation";
+import { Header } from "@/components/layout/header";
 import { createClient } from "@/lib/supabase/server";
-
+import { redirect } from "next/navigation";
+import { CvBuilderForm } from "@/components/cv-form/cv-builder-form";
 export default async function BuilderPage({
   searchParams,
 }: {
@@ -24,23 +24,17 @@ export default async function BuilderPage({
   const isPremium = profile?.is_premium || false;
 
   return (
-    <div className="bg-ivory min-h-screen">
-      <div className="max-w-[1600px] mx-auto px-6 py-8">
-        <div className="mb-10 flex items-end justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-royal-navy tracking-tight">CV Builder</h1>
-            <p className="text-slate-500 mt-2 text-lg">
-              Craft your professional story with precision.
-            </p>
-          </div>
-          <div className="hidden md:flex items-center gap-4 text-sm text-slate-400">
-             <span>Auto-saving enabled</span>
-             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          </div>
-        </div>
-
+    <div className="bg-ivory min-h-screen flex flex-col">
+      <Header 
+        userEmail={user.email} 
+        isPremium={isPremium} 
+        showBack 
+        backLabel="Dashboard" 
+      />
+      
+      <main className="flex-1 max-w-[1600px] mx-auto w-full px-6 py-8">
         <CvBuilderForm initialId={id} isPremium={isPremium} />
-      </div>
+      </main>
     </div>
   );
 }

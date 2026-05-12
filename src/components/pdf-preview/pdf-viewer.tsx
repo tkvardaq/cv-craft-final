@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useCvStore } from "@/lib/store/cv-store";
+import type { CV } from "@/lib/schemas/cv";
 
 const PDFViewer = dynamic(
   () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
@@ -31,6 +32,7 @@ function PDFSkeleton() {
 export function PDFPreview({ cv: propCv }: { cv?: CV }) {
   const storeCv = useCvStore((s) => s.cv);
   const isPremium = useCvStore((s) => s.isPremium);
+  const templateId = useCvStore((s) => s.selectedTemplate);
 
   const cv = propCv || storeCv;
   const serializedCv = JSON.stringify(cv);
@@ -45,7 +47,7 @@ export function PDFPreview({ cv: propCv }: { cv?: CV }) {
         showToolbar={false}
         style={{ border: "none" }}
       >
-        <CVDocumentLazy cv={memoizedCv} isPremium={isPremium} />
+        <CVDocumentLazy cv={memoizedCv} isPremium={isPremium} templateId={templateId} />
       </PDFViewer>
     </div>
   );

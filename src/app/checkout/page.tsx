@@ -3,12 +3,14 @@ import { CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export default function CheckoutPage({
+export default async function CheckoutPage({
   searchParams,
 }: {
-  searchParams: { success?: string; cancelled?: string };
+  searchParams: Promise<{ success?: string; cancelled?: string }>;
 }) {
-  if (searchParams.success) {
+  const params = await searchParams;
+
+  if (params.success) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
         <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl text-center space-y-6 border border-slate-100">
@@ -31,7 +33,7 @@ export default function CheckoutPage({
     );
   }
 
-  if (searchParams.cancelled) {
+  if (params.cancelled) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
         <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl text-center space-y-6 border border-slate-100">

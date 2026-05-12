@@ -12,10 +12,15 @@ import { ExtrasSection } from "./extras-section";
 import { SectionNav } from "./section-nav";
 import { AtsScoreWidget } from "../builder/ats-score-widget";
 import { PDFPreview } from "../pdf-preview/pdf-viewer";
+import { TemplateSelector } from "../builder/template-selector";
+import { PDFDownloadButton } from "../builder/pdf-download-button";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, ArrowRight, Save, Layout, Search, Eye, FileText } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, ArrowLeft, ArrowRight, Save, Layout, Search, Eye, FileText, Download } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useCvStore } from "@/lib/store/cv-store";
 
 const SECTIONS = ["personal", "summary", "experience", "education", "skills", "extras"];
 
@@ -28,6 +33,9 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [cvId, setCvId] = useState<string | undefined>(initialId);
   
+  const setCv = useCvStore((s) => s.setCv);
+  const setIsPremium = useCvStore((s) => s.setIsPremium);
+  
   const methods = useForm<CV>({
     resolver: zodResolver(cvSchema),
     defaultValues: emptyCv,
@@ -37,12 +45,21 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
   const { watch, trigger, handleSubmit, reset, register, getValues } = methods;
   const formValues = watch();
 
+  // Sync state with store
+  useEffect(() => {
+    setCv(formValues);
+  }, [formValues, setCv]);
+
+  useEffect(() => {
+    setIsPremium(isPremium);
+  }, [isPremium, setIsPremium]);
+
   // Load initial data
   useEffect(() => {
     const loadCv = async () => {
+      if (!initialId || cvId) return;
       try {
-        const url = cvId ? `/api/cv?id=${cvId}` : "/api/cv";
-        const res = await fetch(url);
+        const res = await fetch(`/api/cv?id=${initialId}`);
         const { data, id } = await res.json();
         if (data) {
           reset(data);
@@ -55,14 +72,22 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
       }
     };
     loadCv();
-  }, [reset, cvId]);
+  }, [initialId, reset]); // Only run once on mount with initialId
 
+  const lastSavedRef = useRef<string>(JSON.stringify(emptyCv));
+  
   // Auto-save logic
   useEffect(() => {
+    const currentValues = JSON.stringify(formValues);
+    
+    // Only save if dirty and values have actually changed from last save
+    if (!methods.formState.isDirty || currentValues === lastSavedRef.current) {
+      return;
+    }
+
     const timer = setTimeout(() => {
-      if (methods.formState.isDirty) {
-        onSubmit(formValues);
-      }
+      onSubmit(formValues);
+      lastSavedRef.current = currentValues;
     }, 2000); // Save after 2 seconds of inactivity
 
     return () => clearTimeout(timer);
@@ -76,6 +101,7 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
     if (formValues.experience?.length > 0) completed.push("experience");
     if (formValues.education?.length > 0) completed.push("education");
     if (formValues.skills?.length > 0) completed.push("skills");
+    if (formValues.projects?.length > 0 || formValues.awards?.length > 0 || formValues.certifications?.length > 0 || formValues.languages?.length > 0) completed.push("extras");
     setCompletedSections(completed);
   }, [formValues]);
 
@@ -157,6 +183,7 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
       case "experience": return ["experience"];
       case "education": return ["education"];
       case "skills": return ["skills"];
+      case "extras": return ["projects", "awards", "certifications", "languages"];
       default: return [];
     }
   };
@@ -208,9 +235,9 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
             <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 min-h-[600px] transition-all duration-300">
               <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-50 pb-6">
                 <div className="flex-1">
-                  <input 
+                  <Input 
                     {...register("title")}
-                    className="text-2xl font-bold text-royal-navy bg-transparent border-none p-0 focus:ring-0 w-full placeholder:text-slate-300"
+                    className="text-2xl font-bold text-royal-navy bg-transparent border-none p-0 focus-visible:ring-0 w-full placeholder:text-slate-300 shadow-none h-auto"
                     placeholder="Resume Title (e.g. Software Engineer)"
                   />
                   <p className="text-slate-500 text-sm mt-1 capitalize">{activeSection.replace("-", " ")} Section</p>
@@ -269,57 +296,93 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
           </form>
         </div>
 
-        {/* Right Sidebar: Analysis & Live Preview */}
+        {/* Right Sidebar: Preview & Analysis */}
         <div className={cn(
-          "lg:col-span-4 space-y-6 sticky top-24",
+          "lg:col-span-4 space-y-8 sticky top-24 pb-12",
           showPreview ? "block" : "hidden lg:block"
         )}>
-          <div className="flex flex-col gap-6">
-            {/* Real-time PDF Preview */}
-            <div className="aspect-[1/1.4] w-full">
-              <PDFPreview cv={formValues} />
-            </div>
-
-            {/* Analysis Tools */}
-            <div className="space-y-6">
+          {/* Main Preview Card */}
+          <div className="bg-white p-6 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-royal-navy flex items-center gap-2">
+                <Eye className="w-5 h-5 text-royal-gold" />
+                Live Preview
+              </h3>
               <AtsScoreWidget jdAnalysis={jdAnalysis} isPremium={isPremium} />
-              
-              <div className="bg-gradient-to-br from-royal-navy to-slate-800 p-6 rounded-3xl shadow-xl text-white">
-                <h4 className="font-bold flex items-center gap-2 mb-4">
-                  <Search className="h-4 w-4 text-royal-gold" />
-                  Target Job
-                </h4>
-                <p className="text-xs text-white/70 mb-4 leading-relaxed">
-                  Paste a job description to tailor your CV automatically.
-                </p>
-                <textarea 
-                  {...register("targetJobDescription")}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl p-3 text-xs focus:ring-1 focus:ring-royal-gold outline-none h-32 placeholder:text-white/30 text-white"
-                  placeholder="Paste job description here..."
-                />
-                <Button 
-                  type="button"
-                  onClick={handleAnalyzeJd}
-                  disabled={isAnalyzing || !watch("targetJobDescription")}
-                  className="w-full mt-4 bg-royal-gold hover:bg-royal-gold-dark text-white text-xs font-bold py-2 rounded-lg"
-                >
-                  {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin" /> : "Analyze Matching"}
-                </Button>
-
-                {jdAnalysis && (
-                  <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="text-[10px] font-bold text-royal-gold uppercase tracking-wider">Top Keywords</div>
-                    <div className="flex flex-wrap gap-1">
-                      {jdAnalysis.keywords.slice(0, 8).map((k, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-white/10 rounded-md text-[10px] text-white/80 border border-white/5">
-                          {k}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
+            
+            <div className="aspect-[1/1.414] w-full relative group bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 shadow-inner mb-6">
+              <PDFPreview />
+              <div className="absolute inset-0 bg-royal-navy/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            </div>
+
+            <div className="space-y-4">
+              <PDFDownloadButton />
+              <p className="text-[10px] text-center text-slate-400">
+                Premium PDF generation with full font embedding
+              </p>
+            </div>
+          </div>
+
+          {/* Template Selection */}
+          <div className="bg-white p-6 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100">
+             <h3 className="font-bold text-royal-navy flex items-center gap-2 mb-6 text-lg">
+                <Layout className="w-5 h-5 text-royal-gold" />
+                Design Style
+              </h3>
+              <TemplateSelector />
+          </div>
+
+          {/* AI Tailoring (JD Analysis) */}
+          <div className="bg-gradient-to-br from-royal-navy to-slate-900 p-8 rounded-[2rem] shadow-xl text-white overflow-hidden relative group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-royal-gold/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-royal-gold/20 transition-all duration-700" />
+            
+            <h4 className="font-bold flex items-center gap-3 mb-4 text-lg">
+              <Search className="h-5 w-5 text-royal-gold" />
+              AI Resume Tailor
+            </h4>
+            <p className="text-sm text-slate-300 mb-6 leading-relaxed">
+              We'll analyze the job description to suggest improvements and score your CV.
+            </p>
+            
+            <div className="space-y-4">
+              <Textarea 
+                {...register("targetJobDescription")}
+                className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus-visible:ring-1 focus-visible:ring-royal-gold outline-none h-32 placeholder:text-slate-500 text-white transition-all duration-300"
+                placeholder="Paste the job description you're targeting..."
+              />
+              <Button 
+                type="button"
+                onClick={handleAnalyzeJd}
+                disabled={isAnalyzing || !watch("targetJobDescription")}
+                className="w-full bg-royal-gold hover:bg-royal-gold-dark text-royal-navy font-bold py-6 rounded-xl shadow-lg shadow-royal-gold/20 transition-all duration-300 active:scale-[0.98]"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Analyzing...
+                  </>
+                ) : (
+                  "Optimize for Job"
+                )}
+              </Button>
+            </div>
+
+            {jdAnalysis && (
+              <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="h-px bg-white/10 w-full" />
+                <div>
+                  <div className="text-xs font-bold text-royal-gold uppercase tracking-wider mb-3">Matching Keywords</div>
+                  <div className="flex flex-wrap gap-2">
+                    {jdAnalysis.keywords.slice(0, 10).map((k, i) => (
+                      <span key={i} className="px-3 py-1 bg-white/5 rounded-full text-[11px] text-slate-300 border border-white/5 hover:border-royal-gold/30 hover:text-white transition-colors cursor-default">
+                        {k}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

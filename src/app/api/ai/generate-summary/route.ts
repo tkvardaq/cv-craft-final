@@ -1,6 +1,11 @@
-import { ChatNVIDIA } from "@langchain/nvidia-nim";
+import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+
+const nim = new OpenAI({
+  apiKey: process.env.NIM_API_KEY!,
+  baseURL: "https://integrate.api.nvidia.com/v1",
+});
 
 export async function POST(req: Request) {
   try {
@@ -12,11 +17,6 @@ export async function POST(req: Request) {
     }
 
     const { experience, skills, targetJob, targetJd } = await req.json();
-
-    const model = new ChatNVIDIA({
-      model: "meta/llama-3.1-405b-instruct",
-      apiKey: process.env.NIM_API_KEY,
-    });
 
     const experienceText = experience?.map((exp: any) => 
       `${exp.title} at ${exp.company}: ${exp.bullets?.join(". ")}`
@@ -42,9 +42,14 @@ export async function POST(req: Request) {
       Return ONLY the summary text.
     `;
 
-    const response = await model.invoke(prompt);
+    const response = await nim.chat.completions.create({
+      model: "meta/llama-3.1-405b-instruct",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 500,
+    });
     
-    return NextResponse.json({ summary: response.content });
+    return NextResponse.json({ summary: response.choices[0]?.message?.content });
   } catch (error) {
     console.error("AI Error:", error);
     return NextResponse.json({ error: "Failed to generate summary" }, { status: 500 });
