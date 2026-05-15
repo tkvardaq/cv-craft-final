@@ -2,7 +2,6 @@
 
 import {
   Document,
-  Text,
 } from "@react-pdf/renderer";
 import type { CV } from "@/lib/schemas/cv";
 import { getTemplate, type TemplateId } from "./templates";
@@ -13,7 +12,7 @@ interface CVDocumentProps {
   templateId?: TemplateId;
 }
 
-export function CVDocument({ cv, isPremium = false, templateId = "professional" }: CVDocumentProps) {
+export function CVDocument({ cv, templateId = "professional" }: CVDocumentProps) {
   const template = getTemplate(templateId);
   const TemplateComponent = template.component;
 

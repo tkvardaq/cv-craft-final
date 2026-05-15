@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseCvText } from "@/lib/ai/nim";
+import { createClient } from "@/lib/supabase/server";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateKey = `parse:${user.id}:${getClientIp(request)}`;
+    if (isRateLimited(rateKey, 10, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: "Too many parse requests. Try again later." }, { status: 429 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -17,6 +32,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Only PDF files are accepted" },
         { status: 400 }
+      );
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json(
+        { error: "PDF is too large. Please upload a file under 5 MB." },
+        { status: 413 }
       );
     }
 

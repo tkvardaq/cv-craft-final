@@ -2,8 +2,8 @@
 
 import { useFormContext } from "react-hook-form";
 import type { CV } from "@/lib/schemas/cv";
-import { useEffect, useState } from "react";
-import { Target, CheckCircle2, AlertCircle, Info, Crown } from "lucide-react";
+import { useMemo } from "react";
+import { Target, CheckCircle2, AlertCircle, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AtsScoreWidgetProps {
@@ -18,12 +18,10 @@ interface AtsScoreWidgetProps {
 export function AtsScoreWidget({ jdAnalysis, compact, isPremium = false }: AtsScoreWidgetProps) {
   const { watch } = useFormContext<CV>();
   const cv = watch();
-  const [score, setScore] = useState(0);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
 
-  useEffect(() => {
+  const { score, suggestions } = useMemo(() => {
     let newScore = 0;
-    const newSuggestions = [];
+    const newSuggestions: string[] = [];
 
     // Scoring Logic
     if (cv.personal?.firstName && cv.personal?.lastName) newScore += 10;
@@ -78,8 +76,10 @@ export function AtsScoreWidget({ jdAnalysis, compact, isPremium = false }: AtsSc
       }
     }
 
-    setScore(newScore);
-    setSuggestions(newSuggestions.slice(0, 3)); // Only show top 3 suggestions
+    return {
+      score: newScore,
+      suggestions: newSuggestions.slice(0, 3),
+    };
   }, [cv, jdAnalysis]);
 
   if (compact) {

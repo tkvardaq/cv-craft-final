@@ -10,6 +10,7 @@ import Link from "next/link";
 function LoginContent() {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
@@ -18,23 +19,36 @@ function LoginContent() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setMessage(null);
 
     const formData = new FormData(e.currentTarget);
     const result = isLogin ? await login(formData) : await signup(formData);
 
-    if (result?.error) {
+    if (result && "error" in result && result.error) {
       setError(result.error);
+      setIsLoading(false);
+      return;
+    }
+
+    if (result && "message" in result && result.message) {
+      setMessage(result.message);
+      setIsLogin(true);
       setIsLoading(false);
     }
   };
 
   const handleOAuthLogin = async (provider: "google" | "azure") => {
     try {
+      if (!isPublicSupabaseConfigured()) {
+        setError("Supabase is not configured. Update .env.local with your real Supabase URL and anon key.");
+        return;
+      }
+
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${next}`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
         },
       });
       if (error) throw error;
@@ -59,7 +73,9 @@ function LoginContent() {
             onClick={() => {
               setIsLogin(!isLogin);
               setError(null);
+              setMessage(null);
             }}
+            type="button"
             className="font-medium text-royal-gold hover:text-royal-gold-dark transition-colors"
           >
             {isLogin ? "start your 14-day free trial" : "sign in to your existing account"}
@@ -129,6 +145,12 @@ function LoginContent() {
               </div>
             )}
 
+            {message && (
+              <div className="rounded-md bg-emerald-50 p-4">
+                <div className="text-sm text-emerald-700">{message}</div>
+              </div>
+            )}
+
             <div>
               <button
                 type="submit"
@@ -189,6 +211,19 @@ function LoginContent() {
       </div>
     </div>
   );
+}
+
+function isPublicSupabaseConfigured() {
+  const values = [
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  ];
+
+  return values.every((value) => {
+    if (!value) return false;
+    const normalized = value.toLowerCase();
+    return !normalized.includes("placeholder") && !normalized.startsWith("your_");
+  });
 }
 
 export default function LoginPage() {

@@ -1,7 +1,9 @@
-import { nim } from "@/lib/ai/nim";
+import { getNimClient } from "@/lib/ai/nim";
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import type { Experience } from "@/lib/schemas/cv";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
@@ -12,9 +14,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const rateKey = `summary:${user.id}:${getClientIp(req)}`;
+    if (isRateLimited(rateKey, 20, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: "Too many summary requests. Try again later." }, { status: 429 });
+    }
+
     const { experience, skills, targetJob, targetJd } = await req.json();
 
-    const experienceText = experience?.map((exp: any) => 
+    const experienceText = (Array.isArray(experience) ? experience : []).map((exp: Experience) => 
       `${exp.title} at ${exp.company}: ${exp.bullets?.join(". ")}`
     ).join("\n");
 
@@ -28,17 +35,17 @@ export async function POST(req: Request) {
       ${experienceText}
       
       SKILLS:
-      ${skills?.join(", ")}
+      ${Array.isArray(skills) ? skills.slice(0, 50).join(", ") : ""}
       
       TARGET JOB TITLE:
-      ${targetJob || "General professional role"}
+      ${typeof targetJob === "string" ? targetJob.slice(0, 200) : "General professional role"}
 
       Keep it professional, high-impact, and avoid clichés like "hardworking professional".
       Use British English exclusively.
       Return ONLY the summary text.
     `;
 
-    const response = await nim.chat.completions.create({
+    const response = await getNimClient().chat.completions.create({
       model: "meta/llama-3.1-405b-instruct",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,

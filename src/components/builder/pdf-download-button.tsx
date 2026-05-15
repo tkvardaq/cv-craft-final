@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { pdf } from "@react-pdf/renderer";
-import { Download, Loader2, FileDown } from "lucide-react";
+import { Loader2, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CVDocument } from "@/lib/pdf/cv-document";
 import { useCvStore } from "@/lib/store/cv-store";
-import { getTemplate } from "@/lib/pdf/templates";
 import { toast } from "sonner";
 
 export function PDFDownloadButton() {
@@ -23,7 +22,6 @@ export function PDFDownloadButton() {
 
     setIsGenerating(true);
     try {
-      const template = getTemplate(selectedTemplate);
       const blob = await pdf(<CVDocument cv={cv} templateId={selectedTemplate} />).toBlob();
       
       const url = URL.createObjectURL(blob);

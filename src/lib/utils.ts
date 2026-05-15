@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import type { CV } from "@/lib/schemas/cv"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -27,16 +28,15 @@ export function generateId() {
   return Math.random().toString(36).substring(2, 11);
 }
 
-export function flattenCvText(cv: any): string {
+export function flattenCvText(cv: Partial<CV>): string {
   const parts = [
-    cv.personal?.fullName,
-    cv.personal?.jobTitle,
-    cv.summary,
-    ...(cv.experience?.map((e: any) => `${e.title} ${e.company} ${e.location} ${e.description} ${e.bullets?.join(" ")}`) || []),
-    ...(cv.education?.map((e: any) => `${e.degree} ${e.school} ${e.field}`) || []),
-    ...(cv.skills?.map((s: any) => (typeof s === 'string' ? s : s.name)) || []),
-    ...(cv.languages?.map((l: any) => (typeof l === 'string' ? l : l.name)) || []),
-    cv.extras?.join(" ")
+    cv.personal ? `${cv.personal.firstName ?? ""} ${cv.personal.lastName ?? ""}` : "",
+    cv.professionalSummary,
+    ...(cv.experience?.map((experience) => `${experience.title} ${experience.company} ${experience.location} ${experience.bullets?.join(" ")}`) || []),
+    ...(cv.education?.map((education) => `${education.degree} ${education.institution} ${education.grade ?? ""}`) || []),
+    ...(cv.skills || []),
+    ...(cv.languages || []),
+    ...(cv.certifications || []),
   ];
   return parts.filter(Boolean).join(" ");
 }

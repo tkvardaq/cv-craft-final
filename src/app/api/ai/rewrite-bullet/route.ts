@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { rewriteBullet } from "@/lib/ai/nim";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createOptionalServiceClient } from "@/lib/supabase/server";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,6 +10,11 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    const rateKey = `rewrite:${user.id}:${getClientIp(request)}`;
+    if (isRateLimited(rateKey, 30, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: "Too many rewrite requests. Try again later." }, { status: 429 });
     }
 
     const { data: profile } = await supabase
@@ -27,7 +33,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { bulletText, jobTitle, sector, targetJd } = body;
 
-    if (!bulletText || !jobTitle) {
+    if (typeof bulletText !== "string" || typeof jobTitle !== "string" || !bulletText.trim() || !jobTitle.trim()) {
       return NextResponse.json(
         { error: "bulletText and jobTitle are required" },
         { status: 400 }
@@ -36,13 +42,16 @@ export async function POST(request: NextRequest) {
 
     // Check cache
     const { hashString } = await import("@/lib/utils");
-    const cacheKey = hashString(`rewrite:${bulletText}:${jobTitle}:${sector}:${targetJd || ""}`);
+    const serviceSupabase = await createOptionalServiceClient();
+    const cacheKey = hashString(`rewrite:${bulletText.slice(0, 1000)}:${jobTitle.slice(0, 200)}:${sector}:${String(targetJd || "").slice(0, 2000)}`);
 
-    const { data: cached } = await supabase
-      .from("ai_cache")
-      .select("response")
-      .eq("request_hash", cacheKey)
-      .single();
+    const { data: cached } = serviceSupabase
+      ? await serviceSupabase
+          .from("ai_cache")
+          .select("response")
+          .eq("request_hash", cacheKey)
+          .single()
+      : { data: null };
 
     let rewritten: string;
 
@@ -52,10 +61,12 @@ export async function POST(request: NextRequest) {
       rewritten = await rewriteBullet(bulletText, jobTitle, sector || "general", targetJd);
 
       // Cache result (ignore errors - non-critical)
-      await supabase
-        .from("ai_cache")
-        .upsert({ request_hash: cacheKey, response: { text: rewritten } })
-        .select();
+      if (serviceSupabase) {
+        await serviceSupabase
+          .from("ai_cache")
+          .upsert({ request_hash: cacheKey, response: { text: rewritten } })
+          .select();
+      }
     }
 
     // Deduct credit for free users

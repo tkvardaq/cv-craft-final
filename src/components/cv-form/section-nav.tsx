@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { 
+  type LucideIcon,
   User, 
   FileText, 
   Briefcase, 
@@ -14,7 +15,7 @@ import {
 interface Section {
   id: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
 }
 
 const sections: Section[] = [

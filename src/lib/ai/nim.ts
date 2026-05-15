@@ -1,9 +1,16 @@
 import OpenAI from "openai";
+import { requireServerEnv } from "@/lib/env";
 
-export const nim = new OpenAI({
-  apiKey: process.env.NIM_API_KEY || "dummy_key_for_build",
-  baseURL: "https://integrate.api.nvidia.com/v1",
-});
+let nimClient: OpenAI | null = null;
+
+export function getNimClient() {
+  nimClient ??= new OpenAI({
+    apiKey: requireServerEnv("NIM_API_KEY"),
+    baseURL: "https://integrate.api.nvidia.com/v1",
+  });
+
+  return nimClient;
+}
 
 export async function rewriteBullet(
   bulletText: string,
@@ -11,7 +18,7 @@ export async function rewriteBullet(
   sector: string,
   targetJd?: string
 ): Promise<string> {
-  const response = await nim.chat.completions.create({
+  const response = await getNimClient().chat.completions.create({
     model: "meta/llama-3.1-70b-instruct",
     messages: [
       {
@@ -31,7 +38,7 @@ export async function rewriteBullet(
 }
 
 export async function parseCvText(rawText: string): Promise<string> {
-  const response = await nim.chat.completions.create({
+  const response = await getNimClient().chat.completions.create({
     model: "meta/llama-3.1-70b-instruct",
     messages: [
       {
@@ -64,7 +71,7 @@ export async function analyzeJobDescription(
   keywords: string[];
   summary: string;
 }> {
-  const response = await nim.chat.completions.create({
+  const response = await getNimClient().chat.completions.create({
     model: "meta/llama-3.1-70b-instruct",
     messages: [
       {

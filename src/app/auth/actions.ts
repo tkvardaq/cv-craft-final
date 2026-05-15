@@ -3,13 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getPublicSiteUrl, isConfiguredEnvValue } from "@/lib/env";
 
 export async function login(formData: FormData) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase is not configured. Update .env.local with your real Supabase URL and anon key." };
+  }
+
+  const email = String(formData.get("email") || "").trim();
+  const password = String(formData.get("password") || "");
+
+  if (!email || !password) {
+    return { error: "Email and password are required." };
+  }
+
   const supabase = await createClient();
-
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -24,22 +32,30 @@ export async function login(formData: FormData) {
 }
 
 export async function signup(formData: FormData) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase is not configured. Update .env.local with your real Supabase URL and anon key." };
+  }
+
+  const email = String(formData.get("email") || "").trim();
+  const password = String(formData.get("password") || "");
+  const firstName = String(formData.get("firstName") || "").trim();
+  const lastName = String(formData.get("lastName") || "").trim();
+
+  if (!email || !password || !firstName || !lastName) {
+    return { error: "Name, email, and password are required." };
+  }
+
   const supabase = await createClient();
-
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const firstName = formData.get("firstName") as string;
-  const lastName = formData.get("lastName") as string;
-
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         first_name: firstName,
         last_name: lastName,
+        full_name: `${firstName} ${lastName}`.trim(),
       },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
+      emailRedirectTo: `${getPublicSiteUrl()}/auth/callback`,
     },
   });
 
@@ -47,7 +63,12 @@ export async function signup(formData: FormData) {
     return { error: error.message };
   }
 
-  // Ideally, redirect to a "check your email" page or directly to dashboard if auto-confirm is enabled
+  if (!data.session) {
+    return {
+      message: "Account created. Check your email to confirm your address, then sign in.",
+    };
+  }
+
   revalidatePath("/dashboard");
   redirect("/dashboard");
 }
@@ -56,4 +77,11 @@ export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/");
+}
+
+function isSupabaseConfigured() {
+  return (
+    isConfiguredEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+    isConfiguredEnvValue(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  );
 }

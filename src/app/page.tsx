@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, FileText, Sparkles, Target, Shield, Zap, CheckCircle, Download, Layout, Search, Trophy, BarChart3, Users, Clock, Star, LineChart, Globe, Quote, ArrowUpRight, Award } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import type { SVGProps } from "react";
+import { ArrowRight, FileText, Sparkles, Target, Shield, Zap, CheckCircle, Search, Trophy, BarChart3, Users, Star, LineChart, Globe, Quote, Award } from "lucide-react";
 
 export default function Home() {
   return (
@@ -39,12 +40,12 @@ export default function Home() {
 
       {/* Hero Section */}
       <main className="flex-1">
-        <section className="relative pt-48 pb-32 overflow-hidden px-6 lg:pt-64 lg:pb-48 flex flex-col items-center text-center max-w-7xl mx-auto">
+        <section className="relative pt-32 pb-28 overflow-hidden px-6 lg:pt-40 lg:pb-40 flex flex-col items-center text-center max-w-7xl mx-auto">
           {/* Background Decorative Elements */}
           <div className="absolute top-0 -left-20 w-72 h-72 bg-royal-gold/10 rounded-full blur-3xl -z-10 animate-pulse" />
           <div className="absolute top-40 -right-20 w-96 h-96 bg-royal-navy/5 rounded-full blur-3xl -z-10" />
           
-          <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-royal-navy text-white font-black text-[10px] uppercase tracking-[0.3em] mb-12 border border-white/10 shadow-2xl animate-fade-in-up">
+          <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-royal-navy text-white font-black text-[10px] uppercase tracking-[0.3em] mb-10 border border-white/10 shadow-2xl animate-fade-in-up">
             <Sparkles className="h-4 w-4 text-royal-gold" />
             <span>The Gold Standard in AI Recruitment</span>
           </div>
@@ -70,7 +71,7 @@ export default function Home() {
               <div className="flex -space-x-4">
                 {[1,2,3,4,5].map(i => (
                   <div key={i} className="w-12 h-12 rounded-full border-4 border-white bg-royal-gold/10 flex items-center justify-center overflow-hidden shadow-sm">
-                    <img src={`https://i.pravatar.cc/100?u=${i + 10}`} alt="User" className="w-full h-full object-cover" />
+                    <Image src={`https://i.pravatar.cc/100?u=${i + 10}`} alt="User" width={48} height={48} className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
@@ -174,7 +175,7 @@ export default function Home() {
                 <h2 className="text-sm font-black text-royal-gold uppercase tracking-[0.4em] mb-6">Industry Intelligence</h2>
                 <p className="text-4xl md:text-7xl font-black tracking-tighter mb-8 leading-[0.9]">Semantic <br/><span className="text-royal-gold">Precision.</span></p>
                 <p className="text-xl text-white/60 mb-12 leading-relaxed">
-                  Our AI doesn't just scan for words. It understands context, seniority, and industry standards across 50+ sectors.
+                  Our AI does not just scan for words. It understands context, seniority, and industry standards across 50+ sectors.
                 </p>
                 <div className="space-y-6">
                   <div className="flex items-center gap-4">
@@ -202,7 +203,7 @@ export default function Home() {
                    <div className="space-y-8">
                      <div className="p-6 rounded-3xl bg-royal-gold/10 border border-royal-gold/20">
                         <p className="text-[10px] font-black uppercase tracking-widest text-royal-gold mb-2">Original</p>
-                        <p className="text-sm text-white/60 line-through">"Managed a team of 5 people and did marketing tasks."</p>
+                        <p className="text-sm text-white/60 line-through">&quot;Managed a team of 5 people and did marketing tasks.&quot;</p>
                      </div>
                      <div className="flex justify-center">
                         <div className="w-px h-12 bg-gradient-to-b from-royal-gold to-transparent" />
@@ -213,7 +214,7 @@ export default function Home() {
                            <Sparkles className="h-3 w-3" />
                            CvCRAFT Optimized
                         </p>
-                        <p className="text-sm font-bold text-white">"Spearheaded a cross-functional team of 5, delivering high-impact marketing campaigns that drove a 40% increase in lead generation."</p>
+                        <p className="text-sm font-bold text-white">&quot;Spearheaded a cross-functional team of 5, delivering high-impact marketing campaigns that drove a 40% increase in lead generation.&quot;</p>
                      </div>
                    </div>
                 </div>
@@ -306,7 +307,7 @@ export default function Home() {
                   <Quote className="absolute top-10 right-10 h-12 w-12 text-royal-gold/10 group-hover:text-royal-gold/20 transition-colors" />
                   <div className="flex items-center gap-5 mb-10">
                     <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-royal-gold/30 shadow-2xl">
-                      <img src={story.img} alt={story.name} className="w-full h-full object-cover" />
+                      <Image src={story.img} alt={story.name} width={96} height={96} className="w-full h-full object-cover" />
                     </div>
                     <div>
                       <div className="font-black text-sm uppercase tracking-widest text-white">{story.name}</div>
@@ -386,10 +387,10 @@ export default function Home() {
                   <h2 className="text-sm font-black text-royal-gold uppercase tracking-[0.4em] mb-6">Proven Success</h2>
                   <p className="text-4xl md:text-6xl font-black tracking-tighter mb-12">Don&apos;t just take our word for it.</p>
                   <div className="flex items-center gap-4 p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
-                    <img src="https://i.pravatar.cc/100?u=mark" alt="Mark" className="w-16 h-16 rounded-full border-2 border-royal-gold" />
+                    <Image src="https://i.pravatar.cc/100?u=mark" alt="Mark" width={64} height={64} className="w-16 h-16 rounded-full border-2 border-royal-gold" />
                     <div>
                       <p className="font-serif italic text-lg mb-2">&quot;CvCRAFT didn&apos;t just fix my resume; they fixed my confidence. I landed a Senior Role at AWS within 2 weeks.&quot;</p>
-                      <p className="text-xs font-black uppercase tracking-widest text-royal-gold">Mark S. • Cloud Architect</p>
+                      <p className="text-xs font-black uppercase tracking-widest text-royal-gold">Mark S. - Cloud Architect</p>
                     </div>
                   </div>
                 </div>
@@ -418,20 +419,20 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <PricingCard 
                 tier="Starter"
-                price="£0"
+                price="GBP 0"
                 desc="Perfect for a quick refresh."
                 features={["1 Basic Template", "Basic AI Analysis", "Standard PDF Export"]}
               />
               <PricingCard 
                 tier="Professional"
-                price="£19"
+                price="GBP 19"
                 isFeatured={true}
                 desc="The sweet spot for career movers."
                 features={["Unlimited Templates", "Full AI Bullet Rewriting", "ATS Keyword Injection", "Priority Support"]}
               />
               <PricingCard 
                 tier="Executive"
-                price="£49"
+                price="GBP 49"
                 desc="Concierge-level career tools."
                 features={["Everything in Pro", "Custom Template Requests", "1-on-1 AI Interview Prep", "Lifetime Updates"]}
               />
@@ -483,7 +484,7 @@ export default function Home() {
                 Start Crafting Free
                 <Trophy className="h-6 w-6" />
               </Link>
-              <p className="mt-12 text-white/30 font-bold text-sm uppercase tracking-[0.2em]">No Credit Card Required • Instant Export • ATS Ready</p>
+              <p className="mt-12 text-white/30 font-bold text-sm uppercase tracking-[0.2em]">No Credit Card Required - Instant Export - ATS Ready</p>
             </div>
           </div>
         </section>
@@ -561,13 +562,16 @@ function FeatureCard({ icon, title, desc }: { icon: React.ReactNode; title: stri
   );
 }
 
-function ComparisonRow({ feature, trad, craft }: { feature: string; trad: any; craft: any }) {
-  const renderVal = (val: any, isCraft: boolean) => {
+type ComparisonValue = boolean | string;
+type CnInput = string | false | null | undefined;
+
+function ComparisonRow({ feature, trad, craft }: { feature: string; trad: ComparisonValue; craft: ComparisonValue }) {
+  const renderVal = (val: ComparisonValue, isCraft: boolean) => {
     if (typeof val === "boolean") {
       return val ? (
         <div className="flex justify-center"><CheckCircle className={cn("h-6 w-6", isCraft ? "text-royal-gold" : "text-royal-navy/20")} /></div>
       ) : (
-        <div className="flex justify-center text-royal-navy/10">—</div>
+        <div className="flex justify-center text-royal-navy/10">-</div>
       );
     }
     return <div className="text-center text-sm font-black uppercase tracking-widest text-royal-navy/60">{val}</div>;
@@ -632,7 +636,7 @@ function TemplatePreview({ name, tag, color, id, darkText = false }: { name: str
   );
 }
 
-function LockIcon(props: any) {
+function LockIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
   );
@@ -694,6 +698,6 @@ function PricingCard({ tier, price, desc, features, isFeatured = false }: { tier
   );
 }
 
-function cn(...inputs: any[]) {
+function cn(...inputs: CnInput[]) {
   return inputs.filter(Boolean).join(" ");
 }

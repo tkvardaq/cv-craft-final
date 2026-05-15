@@ -3,7 +3,6 @@ import {
   Text,
   View,
   StyleSheet,
-  Font,
 } from "@react-pdf/renderer";
 import type { CV } from "@/lib/schemas/cv";
 

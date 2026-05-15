@@ -4,11 +4,22 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { FileText, Clock, ChevronRight, Trash2, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
+type CvListItem = {
+  id: string;
+  updated_at: string;
+  status: string;
+  json_content?: {
+    title?: string;
+    personal?: {
+      firstName?: string;
+    };
+  };
+};
+
 interface CvListProps {
-  initialCvs: any[];
+  initialCvs: CvListItem[];
 }
 
 export function CvList({ initialCvs }: CvListProps) {

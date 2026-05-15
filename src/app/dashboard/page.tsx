@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { FileText, Plus, Crown, Settings, ChevronRight } from "lucide-react";
-import { signOut } from "@/app/auth/actions";
 import { CvList } from "@/components/dashboard/cv-list";
 import { Header } from "@/components/layout/header";
 

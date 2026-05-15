@@ -1,6 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { cvSchema } from "@/lib/schemas/cv";
+import { cvSchema, type CV } from "@/lib/schemas/cv";
+
+type CvUpsertData = {
+  id?: string;
+  user_id: string;
+  title: string;
+  json_content: CV;
+  status: "draft";
+  updated_at: string;
+};
 
 export async function POST(req: Request) {
   try {
@@ -20,8 +29,9 @@ export async function POST(req: Request) {
     }
 
     // Upsert the CV into the vault. 
-    const upsertData: any = {
+    const upsertData: CvUpsertData = {
       user_id: user.id,
+      title: validatedData.data.title,
       json_content: validatedData.data,
       status: "draft",
       updated_at: new Date().toISOString(),
@@ -123,5 +133,4 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-
 

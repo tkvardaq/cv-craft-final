@@ -5,9 +5,9 @@ import { CvBuilderForm } from "@/components/cv-form/cv-builder-form";
 export default async function BuilderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ id?: string }>;
+  searchParams: Promise<{ id?: string; template?: string }>;
 }) {
-  const { id } = await searchParams;
+  const { id, template } = await searchParams;
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -33,9 +33,8 @@ export default async function BuilderPage({
       />
       
       <main className="flex-1 max-w-[1600px] mx-auto w-full px-6 py-8">
-        <CvBuilderForm initialId={id} isPremium={isPremium} />
+        <CvBuilderForm initialId={id} initialTemplate={template} isPremium={isPremium} />
       </main>
     </div>
   );
 }
-

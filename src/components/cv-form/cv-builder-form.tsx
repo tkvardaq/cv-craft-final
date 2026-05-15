@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, useWatch, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cvSchema, emptyCv, type CV } from "@/lib/schemas/cv";
 import { PersonalSection } from "./personal-section";
@@ -17,24 +17,26 @@ import { PDFDownloadButton } from "../builder/pdf-download-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, ArrowLeft, ArrowRight, Save, Layout, Search, Eye, FileText, Download } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { Loader2, ArrowLeft, ArrowRight, Layout, Search, Eye, FileText } from "lucide-react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useCvStore } from "@/lib/store/cv-store";
+import { templates, type TemplateId } from "@/lib/pdf/templates";
 
 const SECTIONS = ["personal", "summary", "experience", "education", "skills", "extras"];
 
-export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: string; isPremium?: boolean }) {
+export function CvBuilderForm({ initialId, initialTemplate, isPremium = false }: { initialId?: string; initialTemplate?: string; isPremium?: boolean }) {
   const [activeSection, setActiveSection] = useState("personal");
   const [isSaving, setIsSaving] = useState(false);
-  const [completedSections, setCompletedSections] = useState<string[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [jdAnalysis, setJdAnalysis] = useState<{ keywords: string[]; summary: string } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [cvId, setCvId] = useState<string | undefined>(initialId);
+  const [cvId, setCvId] = useState<string | undefined>();
+  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(!initialId);
   
   const setCv = useCvStore((s) => s.setCv);
   const setIsPremium = useCvStore((s) => s.setIsPremium);
+  const setTemplate = useCvStore((s) => s.setTemplate);
   
   const methods = useForm<CV>({
     resolver: zodResolver(cvSchema),
@@ -42,8 +44,9 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
     mode: "onChange"
   });
 
-  const { watch, trigger, handleSubmit, reset, register, getValues } = methods;
-  const formValues = watch();
+  const { control, trigger, handleSubmit, reset, register, getValues, setValue } = methods;
+  const formValues = useWatch({ control }) as CV;
+  const targetJobDescription = useWatch({ control, name: "targetJobDescription" });
 
   // Sync state with store
   useEffect(() => {
@@ -54,30 +57,78 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
     setIsPremium(isPremium);
   }, [isPremium, setIsPremium]);
 
+  useEffect(() => {
+    const templateIds = new Set(templates.map((template) => template.id));
+    if (initialTemplate && templateIds.has(initialTemplate as TemplateId)) {
+      const templateId = initialTemplate as TemplateId;
+      setTemplate(templateId);
+      setValue("templateId", templateId, { shouldDirty: true });
+    }
+  }, [initialTemplate, setTemplate, setValue]);
+
+  const lastSavedRef = useRef<string>(JSON.stringify(emptyCv));
+
   // Load initial data
   useEffect(() => {
     const loadCv = async () => {
-      if (!initialId || cvId) return;
+      if (!initialId) {
+        setIsInitialLoadComplete(true);
+        return;
+      }
+
+      setIsInitialLoadComplete(false);
       try {
         const res = await fetch(`/api/cv?id=${initialId}`);
+        if (!res.ok) {
+          throw new Error("Failed to load CV");
+        }
         const { data, id } = await res.json();
         if (data) {
           reset(data);
+          setTemplate(data.templateId);
+          lastSavedRef.current = JSON.stringify(data);
         }
         if (id) {
           setCvId(id);
         }
       } catch (err) {
         console.error("Failed to load CV", err);
+      } finally {
+        setIsInitialLoadComplete(true);
       }
     };
     loadCv();
-  }, [initialId, reset]); // Only run once on mount with initialId
+  }, [initialId, reset, setTemplate]);
 
-  const lastSavedRef = useRef<string>(JSON.stringify(emptyCv));
+  const onSubmit = useCallback(async (data: CV) => {
+    setIsSaving(true);
+    try {
+      const response = await fetch("/api/cv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, id: cvId }),
+      });
+      
+      if (!response.ok) throw new Error("Failed to save");
+      
+      const { data: savedData } = await response.json();
+      if (savedData?.id && !cvId) {
+        setCvId(savedData.id);
+        window.history.replaceState(null, "", `/builder?id=${savedData.id}`);
+      }
+    } catch (error) {
+      console.error("Failed to save CV", error);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [cvId]);
   
   // Auto-save logic
   useEffect(() => {
+    if (!isInitialLoadComplete) {
+      return;
+    }
+
     const currentValues = JSON.stringify(formValues);
     
     // Only save if dirty and values have actually changed from last save
@@ -91,18 +142,18 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
     }, 2000); // Save after 2 seconds of inactivity
 
     return () => clearTimeout(timer);
-  }, [formValues, methods.formState.isDirty]);
+  }, [formValues, isInitialLoadComplete, methods.formState.isDirty, onSubmit]);
 
   // Track completed sections
-  useEffect(() => {
-    const completed = [];
+  const completedSections = useMemo(() => {
+    const completed: string[] = [];
     if (formValues.personal?.firstName && formValues.personal?.lastName && formValues.personal?.email) completed.push("personal");
     if (formValues.professionalSummary) completed.push("summary");
     if (formValues.experience?.length > 0) completed.push("experience");
     if (formValues.education?.length > 0) completed.push("education");
     if (formValues.skills?.length > 0) completed.push("skills");
     if (formValues.projects?.length > 0 || formValues.awards?.length > 0 || formValues.certifications?.length > 0 || formValues.languages?.length > 0) completed.push("extras");
-    setCompletedSections(completed);
+    return completed;
   }, [formValues]);
 
   const handleAnalyzeJd = async () => {
@@ -128,38 +179,11 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
     }
   };
 
-  const onSubmit = async (data: CV) => {
-    setIsSaving(true);
-    try {
-      const response = await fetch("/api/cv", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, id: cvId }),
-      });
-      
-      if (!response.ok) throw new Error("Failed to save");
-      
-      const { data: savedData } = await response.json();
-      if (savedData?.id && !cvId) {
-        setCvId(savedData.id);
-        // Update URL without refreshing to reflect the new ID
-        window.history.replaceState(null, "", `/builder?id=${savedData.id}`);
-      }
-
-      console.log("Saved CV successfully");
-    } catch (error) {
-      console.error("Failed to save CV", error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-
   const nextSection = async () => {
     const currentIndex = SECTIONS.indexOf(activeSection);
     if (currentIndex < SECTIONS.length - 1) {
       const fieldsToValidate = getFieldsForSection(activeSection);
-      const isValid = await trigger(fieldsToValidate as any);
+      const isValid = await trigger(fieldsToValidate);
       
       if (isValid) {
         setActiveSection(SECTIONS[currentIndex + 1]);
@@ -176,7 +200,7 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
     }
   };
 
-  const getFieldsForSection = (section: string) => {
+  const getFieldsForSection = (section: string): FieldPath<CV>[] => {
     switch (section) {
       case "personal": return ["personal.firstName", "personal.lastName", "personal.email", "personal.phone"];
       case "summary": return ["professionalSummary"];
@@ -342,7 +366,7 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
               AI Resume Tailor
             </h4>
             <p className="text-sm text-slate-300 mb-6 leading-relaxed">
-              We'll analyze the job description to suggest improvements and score your CV.
+              We&apos;ll analyze the job description to suggest improvements and score your CV.
             </p>
             
             <div className="space-y-4">
@@ -354,7 +378,7 @@ export function CvBuilderForm({ initialId, isPremium = false }: { initialId?: st
               <Button 
                 type="button"
                 onClick={handleAnalyzeJd}
-                disabled={isAnalyzing || !watch("targetJobDescription")}
+                disabled={isAnalyzing || !targetJobDescription}
                 className="w-full bg-royal-gold hover:bg-royal-gold-dark text-royal-navy font-bold py-6 rounded-xl shadow-lg shadow-royal-gold/20 transition-all duration-300 active:scale-[0.98]"
               >
                 {isAnalyzing ? (

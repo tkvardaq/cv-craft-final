@@ -7,11 +7,14 @@ import { Check, Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useFormContext } from "react-hook-form";
+import type { CV } from "@/lib/schemas/cv";
 
 const PREMIUM_TEMPLATES: TemplateId[] = ["executive", "creative", "premium-gold", "obsidian"];
 
 export function TemplateSelector() {
   const { selectedTemplate, setTemplate, isPremium } = useCvStore();
+  const { setValue } = useFormContext<CV>();
   const router = useRouter();
 
   const handleSelect = (id: TemplateId) => {
@@ -29,6 +32,7 @@ export function TemplateSelector() {
     }
     
     setTemplate(id);
+    setValue("templateId", id, { shouldDirty: true, shouldValidate: true });
     toast.success(`Template changed to ${templates.find(t => t.id === id)?.name}`);
   };
 

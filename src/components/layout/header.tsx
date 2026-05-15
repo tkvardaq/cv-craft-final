@@ -4,7 +4,6 @@ import Link from "next/link";
 import { FileText, ChevronLeft, LogOut, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/auth/actions";
-import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   userEmail?: string;

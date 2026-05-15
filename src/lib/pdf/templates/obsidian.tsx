@@ -3,7 +3,6 @@ import {
   Text,
   View,
   StyleSheet,
-  Font,
 } from "@react-pdf/renderer";
 import type { CV } from "@/lib/schemas/cv";
 
@@ -321,7 +320,7 @@ export function ObsidianTemplate({ cv }: { cv: CV }) {
           {professionalSummary && (
             <View>
               <Text style={styles.sectionTitle}>Mission</Text>
-              <Text style={styles.mission}>"{professionalSummary}"</Text>
+              <Text style={styles.mission}>{professionalSummary}</Text>
             </View>
           )}
 
@@ -383,4 +382,3 @@ export function ObsidianTemplate({ cv }: { cv: CV }) {
     </Page>
   );
 }
-

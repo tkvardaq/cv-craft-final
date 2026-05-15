@@ -8,7 +8,6 @@ import { useCvStore } from "@/lib/store/cv-store";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 export function ExperienceSection() {
   const { register, control, getValues, setValue, formState: { errors } } = useFormContext<CV>();

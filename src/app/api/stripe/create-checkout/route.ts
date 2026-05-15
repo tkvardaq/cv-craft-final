@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe, PRICE_GBP } from "@/lib/stripe/server";
+import { getStripeServerClient, isStripeConfigured, PRICE_GBP } from "@/lib/stripe/server";
 import { createClient } from "@/lib/supabase/server";
+import { getPublicSiteUrl } from "@/lib/env";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isStripeConfigured()) {
+      return NextResponse.json(
+        { error: "Payments are not enabled yet." },
+        { status: 503 }
+      );
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -28,8 +36,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const origin = request.headers.get("origin") || "http://localhost:3000";
+    const siteUrl = getPublicSiteUrl(request);
 
+    const stripe = getStripeServerClient();
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
@@ -46,8 +55,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/checkout?success=true`,
-      cancel_url: `${origin}/checkout?cancelled=true`,
+      success_url: `${siteUrl}/checkout?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/checkout?cancelled=true`,
       metadata: {
         user_id: user.id,
       },
