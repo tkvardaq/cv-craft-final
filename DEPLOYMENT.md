@@ -51,7 +51,7 @@ npm run build
 npm run start
 ```
 
-`npm run start` uses the generated standalone server at `.next/standalone/server.js`. If you need a different local port, run `$env:PORT=3001; npm run start`.
+`npm run start` uses normal `next start`. If you need a different local port, run `$env:PORT=3001; npm run start`.
 
 Open `http://localhost:3000/api/health` to confirm the app can see its environment variables and Supabase database. A `503` response means configuration is incomplete.
 
@@ -86,6 +86,16 @@ For Hostinger's framework-detecting app uploader, create a source package:
 ```
 
 Upload `cvcraft-source.zip` when Hostinger asks for "app files" and validates the project structure. This package includes the source `src/app` directory at the zip root, so Hostinger can detect Next.js.
+
+For this Hostinger source-upload flow, use:
+
+```text
+Build command: npm run build
+Start command: npm run start
+Entry point: leave blank if Hostinger manages it, otherwise use node_modules/next/dist/bin/next
+```
+
+The source package runs normal Next.js. Standalone output is only enabled by `package-for-hostinger.ps1`.
 
 From this repository on Windows:
 

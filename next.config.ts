@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  output: process.env.NEXT_STANDALONE === "true" ? "standalone" : undefined,
   transpilePackages: ["@react-pdf/renderer", "pdf-parse"],
   images: {
     remotePatterns: [

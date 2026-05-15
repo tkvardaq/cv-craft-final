@@ -5,9 +5,16 @@ $ErrorActionPreference = "Stop"
 
 Write-Host "Starting production build for CvCRAFT..." -ForegroundColor Cyan
 
-npm run build
-if ($LASTEXITCODE -ne 0) {
-    throw "Build failed. Fix the build errors before packaging."
+$previousStandalone = $env:NEXT_STANDALONE
+$env:NEXT_STANDALONE = "true"
+try {
+    npm run build
+    if ($LASTEXITCODE -ne 0) {
+        throw "Build failed. Fix the build errors before packaging."
+    }
+}
+finally {
+    $env:NEXT_STANDALONE = $previousStandalone
 }
 
 $deployDir = "deploy_package"
