@@ -15,6 +15,7 @@ import { PDFPreview } from "../pdf-preview/pdf-viewer";
 import { TemplateSelector } from "../builder/template-selector";
 import { PDFDownloadButton } from "../builder/pdf-download-button";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, ArrowLeft, ArrowRight, Layout, Search, Eye, FileText } from "lucide-react";
@@ -22,6 +23,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useCvStore } from "@/lib/store/cv-store";
 import { templates, type TemplateId } from "@/lib/pdf/templates";
+import debounce from 'lodash/debounce';
 
 const SECTIONS = ["personal", "summary", "experience", "education", "skills", "extras"];
 
@@ -33,6 +35,7 @@ export function CvBuilderForm({ initialId, initialTemplate, isPremium = false }:
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [cvId, setCvId] = useState<string | undefined>();
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(!initialId);
+  const router = useRouter();
   
   const setCv = useCvStore((s) => s.setCv);
   const setIsPremium = useCvStore((s) => s.setIsPremium);
@@ -48,10 +51,16 @@ export function CvBuilderForm({ initialId, initialTemplate, isPremium = false }:
   const formValues = useWatch({ control }) as CV;
   const targetJobDescription = useWatch({ control, name: "targetJobDescription" });
 
-  // Sync state with store
+  // Sync state with store (debounced)
   useEffect(() => {
-    setCv(formValues);
-  }, [formValues, setCv]);
+    const handler = debounce((cv) => {
+      setCv(cv);
+    }, 300); // 300ms debounce
+
+    handler(formValues);
+
+    return () => handler.cancel();
+  }, [formValues, setCv, isSaving]);
 
   useEffect(() => {
     setIsPremium(isPremium);
@@ -114,23 +123,23 @@ export function CvBuilderForm({ initialId, initialTemplate, isPremium = false }:
       const { data: savedData } = await response.json();
       if (savedData?.id && !cvId) {
         setCvId(savedData.id);
-        window.history.replaceState(null, "", `/builder?id=${savedData.id}`);
+        router.push(`/builder?id=${savedData.id}`);
       }
     } catch (error) {
       console.error("Failed to save CV", error);
     } finally {
       setIsSaving(false);
     }
-  }, [cvId]);
+  }, [cvId, router]);
   
   // Auto-save logic
   useEffect(() => {
-    if (!isInitialLoadComplete) {
+    if (!isInitialLoadComplete || isSaving) {
       return;
     }
 
     const currentValues = JSON.stringify(formValues);
-    
+   
     // Only save if dirty and values have actually changed from last save
     if (!methods.formState.isDirty || currentValues === lastSavedRef.current) {
       return;
@@ -142,7 +151,7 @@ export function CvBuilderForm({ initialId, initialTemplate, isPremium = false }:
     }, 2000); // Save after 2 seconds of inactivity
 
     return () => clearTimeout(timer);
-  }, [formValues, isInitialLoadComplete, methods.formState.isDirty, onSubmit]);
+  }, [formValues, isInitialLoadComplete, methods.formState.isDirty, onSubmit, isSaving]);
 
   // Track completed sections
   const completedSections = useMemo(() => {

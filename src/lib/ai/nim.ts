@@ -89,7 +89,8 @@ export async function analyzeJobDescription(
 
   try {
     return JSON.parse(response.choices[0]?.message?.content || "{}");
-  } catch {
-    return { keywords: [], summary: "Failed to analyze job description." };
+  } catch (e) {
+    console.error(e);
+    throw new Error('Failed to parse AI response for JD analysis');
   }
 }

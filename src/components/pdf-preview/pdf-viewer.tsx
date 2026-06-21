@@ -35,9 +35,7 @@ export function PDFPreview({ cv: propCv }: { cv?: CV }) {
   const templateId = useCvStore((s) => s.selectedTemplate);
 
   const cv = propCv || storeCv;
-  const serializedCv = JSON.stringify(cv);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const memoizedCv = useMemo(() => cv, [serializedCv]);
+  const memoizedCv = useMemo(() => cv, [cv]);
 
   return (
     <div className="h-full w-full rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-inner min-h-[600px]">

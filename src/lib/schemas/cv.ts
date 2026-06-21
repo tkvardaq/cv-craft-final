@@ -14,8 +14,11 @@ export const experienceSchema = z.object({
   title: z.string().min(1, "Job title is required"),
   company: z.string().min(1, "Company is required"),
   location: z.string().default(""),
-  startDate: z.string().min(1, "Start date is required"), // YYYY-MM
-  endDate: z.union([z.string(), z.literal("Present")]).default("Present"),
+  startDate: z.string().regex(/^\d{4}-\d{2}$/, "Start date must be YYYY-MM"),
+  endDate: z.union([
+    z.string().regex(/^\d{4}-\d{2}$/, "End date must be YYYY-MM"),
+    z.literal("Present")
+  ]).default("Present"),
   bullets: z.array(z.string()).default([]),
 });
 

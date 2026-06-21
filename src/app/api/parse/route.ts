@@ -3,7 +3,7 @@ import { parseCvText } from "@/lib/ai/nim";
 import { createClient } from "@/lib/supabase/server";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
-        { error: "PDF is too large. Please upload a file under 5 MB." },
+        { error: "PDF is too large. Please upload a file under 10 MB." },
         { status: 413 }
       );
     }

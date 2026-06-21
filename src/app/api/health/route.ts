@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isConfiguredEnvValue } from "@/lib/env";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -28,16 +28,7 @@ export async function GET() {
   let supabase = false;
   let supabaseError: string | null = null;
   try {
-    const client = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-        },
-      }
-    );
+    const client = await createClient();
     const { error } = await client.from("cv_templates").select("id").limit(1);
     supabase = !error;
     supabaseError = error?.message ?? null;

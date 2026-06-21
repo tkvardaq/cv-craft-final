@@ -18,13 +18,27 @@ export async function login(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: { user }, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
     return { error: error.message };
+  }
+
+  if (!user) {
+    return { error: "User not found" };
+  }
+
+  // Upsert profile
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .upsert({ id: user.id, is_premium: false, credits: 3 })
+    .select();
+
+  if (profileError) {
+    console.error('Profile upsert error:', profileError);
   }
 
   revalidatePath("/dashboard");
@@ -61,6 +75,18 @@ export async function signup(formData: FormData) {
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Upsert profile if we have a user (even if session is null, we have a user object)
+  if (data.user) {
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({ id: data.user.id, is_premium: false, credits: 3 })
+      .select();
+
+    if (profileError) {
+      console.error('Profile upsert error:', profileError);
+    }
   }
 
   if (!data.session) {

@@ -77,10 +77,16 @@ export async function POST(request: NextRequest) {
         .eq("id", user.id);
     }
 
-    return NextResponse.json({ 
-      rewritten, 
-      creditsRemaining: profile?.is_premium ? -1 : Math.max(0, (profile?.credits ?? 1) - 1) 
-    });
+    // Refetch profile to get updated credits
+    const { data: updatedProfile } = await supabase
+      .from('profiles')
+      .select('is_premium, credits')
+      .eq('id', user.id)
+      .single();
+
+    const creditsRemaining = updatedProfile?.is_premium ? -1 : (updatedProfile?.credits ?? 0);
+
+    return NextResponse.json({ rewritten, creditsRemaining });
   } catch (error) {
     console.error("Rewrite bullet error:", error);
     return NextResponse.json(

@@ -5,6 +5,16 @@ type Bucket = {
 
 const buckets = new Map<string, Bucket>();
 
+// Cleanup old buckets every minute
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, bucket] of buckets.entries()) {
+    if (bucket.resetAt <= now) {
+      buckets.delete(key);
+    }
+  }
+}, 60 * 1000);
+
 export function getClientIp(request: Request): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
